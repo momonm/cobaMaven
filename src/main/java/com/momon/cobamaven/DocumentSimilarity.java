@@ -87,18 +87,18 @@ text documents.*/
             writer = new PrintWriter(outputFile, "UTF-8");
             writer.println("doc1,doc2,similarity");
 
-//                        //loop on the documents in the folder and compare them together
-//                      for (int i=0; i<directoryIndex.size(); i++) {
-//                              for (int j=i+1; j<directoryIndex.size(); j++) {
-//                                    Map<String, Double> f1 = getTermFrequencies(reader, i); //get the term frequencies profile of the first document
-//                                     RealVector v1 = toRealVector(f1); //convert term frequencies profile to a vector
-//                                     Map<String, Double> f2 = getTermFrequencies2(reader, j); //get the term frequencies profile of the second document
-//                                     RealVector v2 = toRealVector(f2); //convert term frequencies profile to a vector
-//                                     double sim = getCosineSimilarity(v1, v2);  //compute the cosine similarity of the documents pair using their terms frequencies profiles
-//                                                                       writer.println(directoryIndex.get(i)+","+directoryIndex.get(j)+","+sim); //write the similarity to an output CSV file
-//                              }
-//                              terms = new HashSet<>();
-//                        }
+            //loop on the documents in the folder and compare them together
+            for (int i = 0; i < directoryIndex.size(); i++) {
+                for (int j = i + 1; j < directoryIndex.size(); j++) {
+                    Map<String, Double> f1 = getTermFrequencies(reader, i); //get the term frequencies profile of the first document
+                    RealVector v1 = toRealVector(f1); //convert term frequencies profile to a vector
+                    Map<String, Double> f2 = getTermFrequencies2(reader, j); //get the term frequencies profile of the second document
+                    RealVector v2 = toRealVector(f2); //convert term frequencies profile to a vector
+                    double sim = getCosineSimilarity(v1, v2);  //compute the cosine similarity of the documents pair using their terms frequencies profiles
+                    writer.println(directoryIndex.get(i) + "," + directoryIndex.get(j) + "," + sim); //write the similarity to an output CSV file
+                }
+                terms = new HashSet<>();
+            }
             reader.close();
             writer.close();
         } catch (Exception e) {
@@ -121,16 +121,9 @@ text documents.*/
             IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_CURRENT,
                     analyzer);
             IndexWriter writer = new IndexWriter(directory, iwc); //write the index of the documents with their analysis in-memory
-                                 ArrayList<String> directoryIndex = new ArrayList<String>();
+            this.directoryIndex = new ArrayList<String>();
 
-//documents are numbered by a document ID as 1,2,3...n in a lookup file of the documents to be indexed
-            //             FileReader fileReader = null;               
-            //             BufferedReader dsLookup = null;
-            //             int lineCount = 0; 
-            //            fileReader = new FileReader(lookupFile);
-            //            dsLookup = new BufferedReader(fileReader);
-            //           String line = null; //The document number in each line
-            readDir(new File(lookupDirectory),writer);
+            readDir(new File(lookupDirectory), writer);
             writer.close();
             this.directoryIndex = directoryIndex;
             return directory;
@@ -144,21 +137,19 @@ text documents.*/
         String line;
         String documentText = ""; //stores the text from the document
 
-        
-        
         BufferedReader br = new BufferedReader(new FileReader(f));
         System.out.println("Path : " + f.getPath());
 
         while ((line = br.readLine()) != null) {
             System.out.println(line);
-            documentText+=line;
+            documentText += line;
         }
         br.close();
 
         //add the document to the index
         addDocument(writer, documentText);
-//        directoryIndex.add(f.getAbsolutePath());
-        System.out.println(this.lookupDir.relativize(f.toURI()).getPath());
+        directoryIndex.add(this.lookupDir.relativize(f.toURI()).getPath());
+
         System.out.println(" ----------------");
     }
 
@@ -173,9 +164,9 @@ text documents.*/
 
         for (File fi : subdir) {
             if (fi.isFile()) {
-                readFile(fi,writer);
+                readFile(fi, writer);
             } else if (fi.isDirectory()) {
-                readDir(fi,writer);
+                readDir(fi, writer);
             }
         }
     }
