@@ -195,32 +195,46 @@ text documents.*/
     //a method to get the term frequencies from a document
     Map<String, Double> getTermFrequencies(IndexReader reader, int docId) {
         try {
-            Terms vector = reader.getTermVector(docId, CONTENT);
+           Terms vector = reader.getTermVector(docId, CONTENT);
             TermsEnum termsEnum = null;
             termsEnum = vector.iterator(termsEnum);
             Map<String, Double> frequencies = new HashMap<>();
             BytesRef text = null;
+           
             TFIDFSimilarity tfidfSim = new DefaultSimilarity();
             boolean scannedDoc = scannedDocs.contains(docId);
             
-                        
-            while ((text = termsEnum.next()) != null) {
-                String term = text.utf8ToString();
-                int docCount = reader.numDocs();
-                org.apache.lucene.index.Fields fields = reader.getTermVectors(0);
-                Term termInstance = new Term("Content", term);
-                long indexDf = reader.docFreq(termInstance);
-               
-                //IndonesianStemmer -> / IndonesianStemFilter ->  harus pake tokenStream
+            org.apache.lucene.index.Fields fields = reader.getTermVectors(0);
+            int docCount = reader.numDocs();
+            
+            
+             //IndonesianStemmer -> / IndonesianStemFilter ->  harus pake tokenStream
                 
               //  IndonesianStemmer indo = new IndonesianStemmer();
                // TokenStream indo = null;
                 //indo = new IndonesianStemFilter(??);
 
+            
+                        
+            while ((text = termsEnum.next()) != null) {
+               int cnt=0;
+                String stem= text.utf8ToString();
+                String term = text.utf8ToString();
+                Term termInstance = new Term("Content", term);
+                
+                long indexDf = reader.docFreq(termInstance);
+                IndonesianStemmer indo = new IndonesianStemmer();
+                
+                
                 //increment the term count in the terms count lookup if doc not scanned before
                 if (!scannedDoc) {
                     if (termsCount.containsKey(termInstance.toString())) {
-                        Integer cnt = termsCount.get(termInstance.toString());
+                        cnt = termsCount.get(termInstance.toString());
+                        
+                        char[] chars = termInstance.toString().toCharArray(); 
+                        int len = indo.stem(chars, chars.length, false);
+                        stem = new String(chars, 0, len);
+                        
                         cnt++;
                         termsCount.replace(termInstance.toString(), cnt);
                     } else {
