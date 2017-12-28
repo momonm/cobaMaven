@@ -42,6 +42,9 @@ import org.apache.lucene.util.Version;
 import java.io.File;
 import java.net.URI;
 import java.util.TreeSet;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.id.IndonesianStemFilter;
+import org.apache.lucene.analysis.id.IndonesianStemmer;
 
 /**
  *
@@ -81,7 +84,7 @@ text documents.*/
             Directory directory = createIndex(lookupFile);
             IndexReader reader = DirectoryReader.open(directory);
 
-            String outputFile = "C:/Users/Momon/Documents/NetBeansProjects/cobaMaven/output/docs_similarity.csv";
+            String outputFile = "C:/Users/User/Documents/NetBeansProjects/cobaMaven/output/docs_similarity.csv";
             /* the output file where the document similarities will be stored */
             PrintWriter writer;
             writer = new PrintWriter(outputFile, "UTF-8");
@@ -92,7 +95,7 @@ text documents.*/
                 for (int j = i + 1; j < directoryIndex.size(); j++) {
                     Map<String, Double> f1 = getTermFrequencies(reader, i); //get the term frequencies profile of the first document
                     RealVector v1 = toRealVector(f1); //convert term frequencies profile to a vector
-                    Map<String, Double> f2 = getTermFrequencies2(reader, j); //get the term frequencies profile of the second document
+                    Map<String, Double> f2 = getTermFrequencies(reader, j); //get the term frequencies profile of the second document
                     RealVector v2 = toRealVector(f2); //convert term frequencies profile to a vector
                     double sim = getCosineSimilarity(v1, v2);  //compute the cosine similarity of the documents pair using their terms frequencies profiles
                     writer.println(directoryIndex.get(i) + "," + directoryIndex.get(j) + "," + sim); //write the similarity to an output CSV file
@@ -199,13 +202,20 @@ text documents.*/
             BytesRef text = null;
             TFIDFSimilarity tfidfSim = new DefaultSimilarity();
             boolean scannedDoc = scannedDocs.contains(docId);
-
+            
+                        
             while ((text = termsEnum.next()) != null) {
                 String term = text.utf8ToString();
+                int docCount = reader.numDocs();
                 org.apache.lucene.index.Fields fields = reader.getTermVectors(0);
                 Term termInstance = new Term("Content", term);
                 long indexDf = reader.docFreq(termInstance);
-                int docCount = reader.numDocs();
+               
+                //IndonesianStemmer -> / IndonesianStemFilter ->  harus pake tokenStream
+                
+              //  IndonesianStemmer indo = new IndonesianStemmer();
+               // TokenStream indo = null;
+                //indo = new IndonesianStemFilter(??);
 
                 //increment the term count in the terms count lookup if doc not scanned before
                 if (!scannedDoc) {
@@ -236,50 +246,13 @@ text documents.*/
         }
         return null;
     }
+    
+    //Perbedaan antara getTermFrequencies & getTermFrequencies2 itu 
+    // getTermFrequencies -> terms.add(term); , org.apache.lucene.index.Fields fields = reader.getTermVectors(0); 
+    // getTermFrequencies2 -> gag ada "terms.add(term)" ; gag ada "org.apache.lucene.index.Fields fields = reader.getTermVectors(0);"
+    //
 
-    Map<String, Double> getTermFrequencies2(IndexReader reader, int docId) {
-        try {
-            Terms vector = reader.getTermVector(docId, CONTENT);
-            TermsEnum termsEnum = null;
-            termsEnum = vector.iterator(termsEnum);
-            Map<String, Double> frequencies = new HashMap<>();
-            BytesRef text = null;
-            TFIDFSimilarity tfidfSim = new DefaultSimilarity();
-            boolean scannedDoc = scannedDocs.contains(docId);
-            int docCount = reader.numDocs();
-
-            while ((text = termsEnum.next()) != null) {
-                String term = text.utf8ToString();
-                Term termInstance = new Term("Content", term);
-                long indexDf = reader.docFreq(termInstance);
-
-                //increment the term count in the terms count lookup if doc not scanned before
-                if (!scannedDoc) {
-                    if (termsCount.containsKey(termInstance.toString())) {
-                        Integer cnt = termsCount.get(termInstance.toString());
-                        cnt++;
-                        termsCount.replace(termInstance.toString(), cnt);
-                    } else {
-                        termsCount.put(termInstance.toString(), 1);
-                    }
-                }
-
-                DocsEnum docs = termsEnum.docs(MultiFields.getLiveDocs(reader), null, 0);
-                double tfidf = 0.0;
-                while (docs.nextDoc() != DocsEnum.NO_MORE_DOCS) {
-                    tfidf = tfidfSim.tf(docs.freq()) * tfidfSim.idf(docCount, indexDf);
-                }
-
-                frequencies.put(term, tfidf);
-                scannedDocs.add(docId);
-
-            }
-            return frequencies;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+    
 
     //convert the term-frequencies extracted to a real vector
     RealVector toRealVector(Map<String, Double> map) {
@@ -295,7 +268,7 @@ text documents.*/
     //Write the terms-frequencies from the documents to a CSV file
     private void writeTermsCount() {
         try {
-            String outputFile = "C:/Users/Momon/Documents/NetBeansProjects/cobaMaven/output/document_terms_count.csv";
+            String outputFile = "C:/Users/User/Documents/NetBeansProjects/cobaMaven/output/document_terms_count.csv";
             PrintWriter writer;
             writer = new PrintWriter(outputFile, "UTF-8");
             writer.println("term,count");
@@ -313,6 +286,6 @@ text documents.*/
 
     //MAIN class to execute with the .txt-file lookup of the documents to index
     public static void main(String[] args) {
-        new DocumentSimilarity("C:/Users/Momon/Documents/NetBeansProjects/cobaMaven/read");
+        new DocumentSimilarity("C:/Users/User/Documents/NetBeansProjects/cobaMaven/read");
     }
 }
