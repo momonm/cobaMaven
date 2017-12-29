@@ -231,6 +231,7 @@ text documents.*/
                     if (termsCount.containsKey(termInstance.toString())) {
                         cnt = termsCount.get(termInstance.toString());
                         
+                          //untuk memecah kata sambungnya 
                         char[] chars = termInstance.toString().toCharArray(); 
                         int len = indo.stem(chars, chars.length, false);
                         stem = new String(chars, 0, len);
