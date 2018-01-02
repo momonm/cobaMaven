@@ -41,6 +41,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Scanner;
 import java.util.TreeSet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.id.IndonesianStemFilter;
@@ -86,20 +87,27 @@ text documents.*/
 
             String outputFile = "C:/Users/Momon/Documents/NetBeansProjects/cobaMaven/output/docs_similarity.csv";
             /* the output file where the document similarities will be stored */
+                       
             PrintWriter writer;
             writer = new PrintWriter(outputFile, "UTF-8");
             writer.println("doc1,doc2,similarity");
 
+            
+            String st;
+            System.out.println("Masukkan kata kunci :");
+            Scanner in = new Scanner(System.in);
+            st = in.nextLine();
+                     
             //loop on the documents in the folder and compare them together
-            for (int i = 0; i < directoryIndex.size(); i++) {
-                for (int j = i + 1; j < directoryIndex.size(); j++) {
+            for (int i = 0; i < directoryIndex.length(); i++) {
+                    String input;
                     Map<String, Double> f1 = getTermFrequencies(reader, i); //get the term frequencies profile of the first document
-                    Map<String, Double> f2 = getTermFrequencies(reader, j); //get the term frequencies profile of the second document
+                    Map<String, Double> f2 = getTermFrequencies(reader, input); //get the term frequencies profile of the second document
                     RealVector v1 = toRealVector(f1); //convert term frequencies profile to a vector
                     RealVector v2 = toRealVector(f2); //convert term frequencies profile to a vector
                     double sim = getCosineSimilarity(v1, v2);  //compute the cosine similarity of the documents pair using their terms frequencies profiles
-                    writer.println(directoryIndex.get(i) + "," + directoryIndex.get(j) + "," + sim); //write the similarity to an output CSV file
-                }
+                    writer.println(directoryIndex.get(i) + "," + directoryIndex.get(st) + "," + sim); //write the similarity to an output CSV file
+                
                 terms = new HashSet<>();
             }
             reader.close();
@@ -136,6 +144,7 @@ text documents.*/
         return null;
     }
 
+    //to read the contents of a file 
     private void readFile(File f, IndexWriter writer) throws Exception {
         String line;
         String documentText = ""; //stores the text from the document
@@ -156,7 +165,7 @@ text documents.*/
         System.out.println(" ----------------");
     }
 
-//tambah readDir buat is.Directory 
+//read a directory
     private void readDir(File f, IndexWriter writer) throws Exception {
 
         Set<String> set = new TreeSet<String>();
@@ -167,8 +176,10 @@ text documents.*/
 
         for (File fi : subdir) {
             if (fi.isFile()) {
+                //if not the direct directory then read every file with readfile
                 readFile(fi, writer);
             } else if (fi.isDirectory()) {
+                //if there is a directory then go in and run readdir
                 readDir(fi, writer);
             }
         }
@@ -194,6 +205,7 @@ text documents.*/
 
     //a method to get the term frequencies from a document
     Map<String, Double> getTermFrequencies(IndexReader reader, int docId) {
+     
         try {
             Terms vector = reader.getTermVector(docId, CONTENT);
             TermsEnum termsEnum = null;
@@ -207,11 +219,7 @@ text documents.*/
 
             int docCount = reader.numDocs();
 
-            //IndonesianStemmer -> / IndonesianStemFilter ->  harus pake tokenStream
-            //  IndonesianStemmer indo = new IndonesianStemmer();
-            // TokenStream indo = null;
-            //indo = new IndonesianStemFilter(??);
-            while ((text = termsEnum.next()) != null) {
+             while ((text = termsEnum.next()) != null) {
                 int cnt = 0;
                 String term = text.utf8ToString();
                 //untuk memecah kata sambungnya 
@@ -244,10 +252,12 @@ text documents.*/
 
                 frequencies.put(term, tfidf);
                 scannedDocs.add(docId);
+                
                 if (!terms.contains(term)) {
                     terms.add(term);
                 }
             }
+           
             return frequencies;
         } catch (Exception e) {
             e.printStackTrace();
@@ -255,10 +265,10 @@ text documents.*/
         return null;
     }
 
-    //Perbedaan antara getTermFrequencies & getTermFrequencies2 itu 
-    // getTermFrequencies -> terms.add(term); , org.apache.lucene.index.Fields fields = reader.getTermVectors(0); 
-    // getTermFrequencies2 -> gag ada "terms.add(term)" ; gag ada "org.apache.lucene.index.Fields fields = reader.getTermVectors(0);"
-    //
+    private void countTerm(IndexReader reader, int st){
+        
+    }
+    
     //convert the term-frequencies extracted to a real vector
     RealVector toRealVector(Map<String, Double> map) {
         RealVector vector = new ArrayRealVector(terms.size());
@@ -292,6 +302,9 @@ text documents.*/
 
     //MAIN class to execute with the .txt-file lookup of the documents to index
     public static void main(String[] args) {
+       
+        
+        
         new DocumentSimilarity("C:/Users/Momon/Documents/NetBeansProjects/cobaMaven/read");
     }
 }
